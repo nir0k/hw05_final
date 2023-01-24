@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% block header %} {{ title }} {% endblock %}
+{% block content %}  
+  <div class="container py-5">
+    <h1>{{ title }}</h1>
+    <p>{{ description }}</p>
+    <article>
+      {% for post in page_obj %}
+        <ul>
+          <li>
+            Автор: {{ post.author.get_full_name }}
+          </li>
+          <li>
+            Дата публикации: {{ post.pub_date|date:"d E Y" }}
+          </li>
+        </ul>
+        {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+          <img class="card-img my-2" src="{{ im.url }}" >
+        {% endthumbnail %}      
+        <p>
+          {{ post.text }}
+        </p>
+        <a href="{% url 'posts:post_detail' post.id %}">подробная информация</a><br>
+        {% if not forloop.last %}<hr>{% endif %}
+      {% endfor %}         
+    </article>
+    {% include 'includes/paginator.html' %}  
+  </div>  
+  {% endblock %}
