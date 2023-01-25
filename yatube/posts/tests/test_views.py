@@ -1,15 +1,15 @@
 import shutil
 import tempfile
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.cache import cache
-from ..constants import POSTS_PER_PAGE
+from posts.models import Comment, Follow, Group, Post
 
-from posts.models import Post, Group, Comment, Follow
+from ..constants import POSTS_PER_PAGE
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)

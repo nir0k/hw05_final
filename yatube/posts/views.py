@@ -1,10 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from .constants import POSTS_PER_PAGE
-from .forms import PostForm, CommentForm
-from .models import Group, Post, User, Follow
-from .utils import pagi
 from django.views.decorators.cache import cache_page
+
+from .constants import POSTS_PER_PAGE
+from .forms import CommentForm, PostForm
+from .models import Follow, Group, Post, User
+from .utils import pagi
 
 
 def group_posts(request, slug):
@@ -52,11 +53,8 @@ def profile(request, username):
         }
         return render(request, 'posts/profile.html', context)
     curent_user = get_object_or_404(User, username=request.user.username)
-    follower = False
     following = curent_user.follower.filter(author=author)
-    if following.exists():
-        follower = True
-
+    follower = following.exists()
     post_list = author.author_posts.all()
     title = 'Профайл пользователя'
     if request.method == 'POST':
@@ -121,27 +119,27 @@ def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if post.author != request.user:
         return redirect('posts:post_detail', post_id=post_id)
-    if request.method == 'POST':
-        form = PostForm(
-            request.POST or None,
-            files=request.FILES or None,
-            instance=post,
-        )
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.text = form.cleaned_data['text']
-            post.group = form.cleaned_data['group']
-            post.image = form.cleaned_data['image']
-            post.save()
-            return redirect('posts:post_detail', post_id=post_id)
-
     form = PostForm(instance=post,)
     context = {
         'post': post,
         'form': form,
         'is_edit': True,
     }
+    if request.method != 'POST':
+        return render(request, 'posts/create_post.html', context)
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None,
+        instance=post,
+    )
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        post.text = form.cleaned_data['text']
+        post.group = form.cleaned_data['group']
+        post.image = form.cleaned_data['image']
+        post.save()
+        return redirect('posts:post_detail', post_id=post_id)
     return render(request, 'posts/create_post.html', context)
 
 
@@ -177,10 +175,11 @@ def profile_follow(request, username):
     template = 'posts:profile'
     author = get_object_or_404(User, username=username)
     curent_user = get_object_or_404(User, username=request.user.username)
-    if author != curent_user:
-        following = curent_user.follower.filter(author=author)
-        if not following.exists():
-            Follow.objects.create(user=curent_user, author=author)
+    if author == curent_user:
+        return redirect(template, author)
+    following = curent_user.follower.filter(author=author)
+    if not following.exists():
+        Follow.objects.create(user=curent_user, author=author)
     return redirect(template, author)
 
 
@@ -189,8 +188,9 @@ def profile_unfollow(request, username):
     template = 'posts:profile'
     author = get_object_or_404(User, username=username)
     curent_user = get_object_or_404(User, username=request.user.username)
-    if author != curent_user:
-        following = curent_user.follower.filter(author=author)
-        if following.exists():
-            Follow.objects.get(user=curent_user, author=author).delete()
+    if author == curent_user:
+        return redirect(template, author)
+    following = curent_user.follower.filter(author=author)
+    if following.exists():
+        Follow.objects.get(user=curent_user, author=author).delete()
     return redirect(template, author)

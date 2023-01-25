@@ -1,14 +1,12 @@
 import shutil
 import tempfile
 
-from django.contrib.auth import get_user_model
-from django.test import Client, override_settings, TransactionTestCase
-from django.urls import reverse
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
-
-
-from posts.models import Post, Group, Comment
+from django.test import Client, TransactionTestCase, override_settings
+from django.urls import reverse
+from posts.models import Comment, Group, Post
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)

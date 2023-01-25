@@ -1,5 +1,5 @@
-from django.test import TestCase, Client
 from django.core.cache import cache
+from django.test import Client, TestCase
 
 
 class ViewTestClass(TestCase):
